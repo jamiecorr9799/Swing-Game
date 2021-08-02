@@ -25,20 +25,20 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//public functions (other actors call these)
 	void GrappelHit();
 	void SwingHit();
 	void SwingHasBase(float Height);
 	
+	//public variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int KeyCount = 0;
 	UPROPERTY(EditAnywhere)
 	FVector InitialSpawnLocation = FVector (0,0,110.15);
 	FVector SwingPivot = FVector (230,-600,200);
 	FVector InitialGrappelPosition = FVector (0, 0, 0);
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SwingRadius = 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RotationRate = 100;
 
@@ -96,8 +96,8 @@ private:
 	//Swing Variables & Functions
 
 	UPROPERTY(EditAnywhere)
-	float AngularSpeed = 0.01;
-	float AngularAcceleration = 0;
+	float AngularPosition = 0.01;
+	float AngularSpeed = 0;
 	float MaxAngle = 0;
 	float XYangle = 0;
 	int PreviousMovementType = 0;
@@ -118,6 +118,6 @@ private:
 	void ShootSwingBullet();
 	
 	void SwingingMovement();
-	void CalculateSwingingAngularSpeed();
+	void CalculateSwingingAngularPosition();
 	FVector CalculateSwingingPosition();
 };

@@ -83,8 +83,7 @@ void AMyPlayer::CustomJump()
 {		
 	Jump();
 	
-	//Stop any grappeling/swinging
-	Release();
+	Release(); //Stop any grappeling/swinging
 }
 
 void AMyPlayer::Release()
@@ -94,23 +93,23 @@ void AMyPlayer::Release()
 		return;
 	}
 
-	if(MovementType == 1)
+	if(MovementType == 1) //if player has just finished grappling
 	{
-		GetCharacterMovement()->Velocity = GrappelVelocity;
+		GetCharacterMovement()->Velocity = GrappelVelocity; //set velocity to same as when grappling
 	}
 
-	if(MovementType == 2)
+	if(MovementType == 2) //if player has just finished swinging 
 	{
-		GetCharacterMovement()->Velocity = SwingVelocity;
+		GetCharacterMovement()->Velocity = SwingVelocity; //set velocity to same as when swinging
 	}
 
-	MovementType = 0;
+	MovementType = 0; //set player movement to walking
 	 
 	if(IsValid(TempGrappel))
 	{
 		if(TempGrappel->IsValidLowLevel())
 		{	
-			TempGrappel->Release();
+			TempGrappel->Release(); //resets movement components on blocks
 			TempGrappel->Destroy(); //destroy grappel bullet
 		}
 	}
@@ -119,7 +118,7 @@ void AMyPlayer::Release()
 	{
 		if(TempSwing->IsValidLowLevel())
 		{	
-			TempSwing->Release();
+			TempSwing->Release(); //resets movement components on blocks
 			TempSwing->Destroy(); //destroy swinging bullet
 		}
 	}
@@ -135,7 +134,7 @@ void AMyPlayer::Move(int Type)
 {
 	if(Type == 1) //if grappel movement
 	{
-		if(bGrappelHit == true) //and if grappel bullet has attached
+		if(bGrappelHit) //and if grappel bullet is attached
 		{
 			GrappelMovement(); //grappel
 		}
@@ -143,7 +142,7 @@ void AMyPlayer::Move(int Type)
 
 	if(Type == 2) //if swinging movement
 	{
-		if(bSwingHit) //and if swinging bullet has attached
+		if(bSwingHit) //and if swinging bullet is attached
 		{
 			SwingingMovement(); //swing
 		}
@@ -152,7 +151,7 @@ void AMyPlayer::Move(int Type)
 
 void AMyPlayer::ShootGrappelBullet()
 {	
-	if(MovementType == 1 || MovementType == 2)
+	if(MovementType == 1 || MovementType == 2) 
 	{
 		return;
 	}
@@ -163,10 +162,10 @@ void AMyPlayer::ShootGrappelBullet()
 		FRotator PlayerRotation;
 		GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerLocation, PlayerRotation); //get location and rotation of where player is looking
 
-		FVector SpawnLocation = GetActorLocation() + 100 * PlayerRotation.Vector(); //spawn location set to current location and out of reach
+		FVector SpawnLocation = GetActorLocation() + 100 * PlayerRotation.Vector(); //spawn location set to players location but out of reach
 
 		TempGrappel = GetWorld()->SpawnActor<AGrappelBullet>(GrappelBullet, SpawnLocation, GetActorRotation()); //spawn grappel bullet at spawn location with the player's rotation
-		TempGrappel->SetOwner(this); //the player owns the grappel bullet
+		TempGrappel->SetOwner(this); //the player owns the grapple bullet
 	}
 
 	t = 0;
@@ -181,16 +180,16 @@ void AMyPlayer::GrappelHit()
 	}
 
 	bGrappelHit	= true;	//grappel has attached
-	MovementType = 1;
+	MovementType = 1; ///change movement to grappling
 	
 	InitialGrappelPosition = GetActorLocation(); //intial position is where the player is
-	GrappelDestination = TempGrappel->GetActorLocation(); //destination is where the grappel is
-	GrappelScaleFactor = (GrappelDestination - InitialGrappelPosition).Size(); //adjusts so speed is constant
+	GrappelDestination = TempGrappel->GetActorLocation(); //destination is where the grapple is
+	GrappelScaleFactor = (GrappelDestination - InitialGrappelPosition).Size(); //distance between player and grapple (used to adjust speed)
 
-	if(GrappelScaleFactor > MaxRange)
+	if(GrappelScaleFactor > MaxRange) //if the grapple is too far away
 	{
-		MovementType = 0;
-		Release();
+		MovementType = 0; //set movement to walking
+		Release(); //release the grapple
 	}
 
 	GrappelVelocity = 50 * (GrappelDestination - InitialGrappelPosition) * (GrappelSpeed) * ( 1 / GrappelScaleFactor ); //calculates player velocity when grappeling
@@ -204,14 +203,14 @@ void AMyPlayer::GrappelMovement()
 		return;
 	}
 
-	if(GrappelSpeed * (t / GrappelScaleFactor) < 0.95) //if player isn't at grappel destination
+	if(GrappelSpeed * (t / GrappelScaleFactor) < 0.95) //if player isn't at grapple destination
 	{
 		CalculateGrappelPosition(t);
 
 		t = t + 1; 
 	}
 
-	if(GrappelSpeed * (t / GrappelScaleFactor) > 0.95)
+	if(GrappelSpeed * (t / GrappelScaleFactor) > 0.95) //if player is at grapple location, slow down grapple to a stop
 	{
 		GrappelVelocity = FVector (0,0,0);
 	}
@@ -221,7 +220,7 @@ void AMyPlayer::GrappelMovement()
 
 void AMyPlayer::CalculateGrappelPosition(int a)
 {
-	GrappelPosition = (1 - GrappelSpeed * (a / GrappelScaleFactor)) * InitialGrappelPosition + GrappelSpeed * (a/ GrappelScaleFactor) * GrappelDestination; //move towards grappel destination
+	GrappelPosition = (1 - GrappelSpeed * (a / GrappelScaleFactor)) * InitialGrappelPosition + GrappelSpeed * (a/ GrappelScaleFactor) * GrappelDestination; //move towards grapple destination
 }
 
 void AMyPlayer::ShootSwingBullet()
@@ -237,7 +236,7 @@ void AMyPlayer::ShootSwingBullet()
 		FRotator PlayerRotation;
 		GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerLocation, PlayerRotation); //get location and rotation of where player is looking
 
-		FVector SpawnLocation = GetActorLocation() + 100 * PlayerRotation.Vector();	//spawn location set to current location and out of reach
+		FVector SpawnLocation = GetActorLocation() + 100 * PlayerRotation.Vector();	//spawn location set to player's location and out of reach
 
 		TempSwing = GetWorld()->SpawnActor<ASwing>(SwingBullet, SpawnLocation, GetActorRotation());	//spawn swing bullet at spawn location with the player's rotation
 		TempSwing->SetOwner(this);	//the player owns the swing bullet
@@ -247,7 +246,7 @@ void AMyPlayer::ShootSwingBullet()
 	t = 0;
 	bSwingHit = false;	//Swing hasn't attached yet
 	bInitialGrappelComplete = false;
-	bInitialHeight = false;
+	//bInitialHeight = false;
 	bSwingBase = false;
 }
 
@@ -260,15 +259,15 @@ void AMyPlayer::SwingHit()
 
 	bSwingHit = true;	//swing has attached	
 
-	InitialSwingPosition = GetActorLocation();	//gets location of where swing starts
+	InitialSwingPosition = GetActorLocation();	//gets location of where swing starts (player's location)
 	SwingPivot = TempSwing->GetActorLocation();	//gets location of pivot
 
 	float Radius = (InitialSwingPosition - SwingPivot).Size();
 
-	if(Radius > MaxRange)
+	if(Radius > MaxRange) //if swing distance is too far
 	{
-		MovementType = 0;
-		Release();
+		MovementType = 0; //set movement to walking
+		Release(); //release the swing
 	}
 
 	//calulates the angle between the player and pivot (if pivot had same Z value as player) on the XY plane
@@ -277,10 +276,10 @@ void AMyPlayer::SwingHit()
 	XYangle = FMath::Acos( A.X / (A.Size() * B.Size()));
 
 
-	//adjusts the angle to the true value since ACos isn't a 1 to 1 function
-	if(InitialSwingPosition.Y - SwingPivot.Y < 0)
+	if(InitialSwingPosition.Y - SwingPivot.Y < 0) //if the swing pivot is above the player
 	{
-		XYangle = 2*PI - XYangle;
+		XYangle = 2*PI - XYangle; 	//adjusts the angle to the true value since ACos isn't a 1 to 1 function
+
 	}	
 	
 
@@ -292,20 +291,21 @@ void AMyPlayer::SwingHit()
 	//calculates radius of swing
 	SwingRadius = (InitialSwingPosition - SwingPivot).Size();
 	
-	AngularSpeed = 0;
+	AngularPosition = 0;
 
-	if(bInitialGrappelComplete == false)
+	if(!bInitialGrappelComplete) //if player hasn't yet completed the grapple (i.e. player isn't ready to swing and needs to grapple towards the pivot to ensure they dont immediately hit the floor)
 	{
-		bInitialHeight = true;
+		//bInitialHeight = true;
 
-		PreviousMovementType = MovementType;
-		MovementType = 2;
+		MovementType = 2; //set movement to swinging
 
-		InitialGrappelPosition = GetActorLocation(); //intial position is where the player is
+		InitialGrappelPosition = GetActorLocation();
+		
 		if(IsValid(TempSwing))
 		{	
-			GrappelDestination = TempSwing->GetActorLocation(); //destination is where the grappel is
+			GrappelDestination = TempSwing->GetActorLocation(); // grappling destination is the swing pivot
 		}
+		
 		GrappelScaleFactor = (GrappelDestination - InitialGrappelPosition).Size(); //adjusts so speed is constant
 		SwingVelocity = 50 * (GrappelDestination - InitialGrappelPosition) * (GrappelSpeed) * ( 1 / GrappelScaleFactor );	
 	}
@@ -322,7 +322,7 @@ void AMyPlayer::SwingingMovement()
 	{
 		if(SwingPivot.Z - SwingRadius - PlayerHeight < HeightOfBase) //if player needs to grappel before swinging
 		{
-			CalculateGrappelPosition(T);
+			CalculateGrappelPosition(T); //calculates movement of player whilst grappling
 
 			T++; 
 
@@ -333,23 +333,19 @@ void AMyPlayer::SwingingMovement()
 
 		if(SwingPivot.Z - SwingRadius - PlayerHeight > HeightOfBase && bInitialGrappelComplete == false) //if player has finished grappeling
 		{
-			bInitialGrappelComplete = true;
-			SwingHit();
+			bInitialGrappelComplete = true; //the player can now start swinging
+			SwingHit(); //updates key variables to calculate swinging movement
 		}
 				
 		if(SwingPivot.Z - SwingRadius - PlayerHeight > HeightOfBase && bInitialGrappelComplete == true) //if player has finished grappelling and is ready to swing
 		{
-			//once initial grappeling is complete
-			FVector SwingPosition = FVector (0,0,0);
-
-			CalculateSwingingAngularSpeed();
+			CalculateSwingingAngularPosition(); //calculates speed of player whilst swinging
 			
-			SwingPosition = CalculateSwingingPosition();
+			FVector SwingPosition = CalculateSwingingPosition(); //caluclates movement of player whilst swinging
 
 			SetActorLocation(SwingPosition);
 			
 			t++;
-
 		}
 	}
 
@@ -358,7 +354,7 @@ void AMyPlayer::SwingingMovement()
 	{
 		if(GrappelSpeed * (T / GrappelScaleFactor) < 0.4) //if player is doing the initial grappel
 		{
-			CalculateGrappelPosition(T);
+			CalculateGrappelPosition(T);  //calculates movement of player whilst grappling
 
 			T++; 
 
@@ -367,18 +363,15 @@ void AMyPlayer::SwingingMovement()
 
 		if(GrappelSpeed * (T / GrappelScaleFactor) > 0.4 && bInitialGrappelComplete == false) //if player has finished initial grappel
 		{
-			bInitialGrappelComplete = true;
-			SwingHit();
+			bInitialGrappelComplete = true;	//the player can now start swinging
+			SwingHit(); //updates key variables to calculate swinging movement
 		}
 				
 		if(GrappelSpeed * (T / GrappelScaleFactor) > 0.4 && bInitialGrappelComplete == true) //if player is ready to swing
 		{
-			//once initial grappeling is complete
-			FVector SwingPosition = FVector (0,0,0);
-
-			CalculateSwingingAngularSpeed();
+			CalculateSwingingAngularPosition(); //calculates speed of player whilst swinging
 			
-			SwingPosition = CalculateSwingingPosition();
+			FVector SwingPosition = CalculateSwingingPosition(); //caluclates movement of player whilst swinging
 
 			SetActorLocation(SwingPosition);
 			
@@ -388,18 +381,18 @@ void AMyPlayer::SwingingMovement()
 	}
 }
 
-void AMyPlayer::CalculateSwingingAngularSpeed()
+void AMyPlayer::CalculateSwingingAngularPosition() //calculates the angle between the player and pivot in the Z-plane     (i.e. how far through the swing the player is)
 {
 	if(InitialSwingPosition.Z - SwingPivot.Z < 0) //if swing pivot is above the player
 		{
-			AngularSpeed = -MaxAngle * FMath::Cos(t * 0.1 * sqrt(10 / SwingRadius)); //rotation rate changes depending where it is on the cycle (enables pivot to go back and forth)
-			AngularAcceleration = MaxAngle * sqrt(10 / SwingRadius) * FMath::Sin(t * 0.1 * sqrt(10 / SwingRadius));
+			AngularPosition = -MaxAngle * FMath::Cos(t * 0.1 * sqrt(10 / SwingRadius)); //rotation rate changes depending where it is on the cycle (enables pivot to go back and forth)
+			AngularSpeed = MaxAngle * sqrt(10 / SwingRadius) * FMath::Sin(t * 0.1 * sqrt(10 / SwingRadius));
 		}
 
 	else  //if swing pivot height is below the player
 		{
-			AngularSpeed = - (PI - MaxAngle) * FMath::Cos(t * 0.1 * sqrt(10 / SwingRadius)) + (PI - MaxAngle); //rotation rate changes depending where it is on the cycle (enables pivot to go back and forth)
-			AngularAcceleration = (PI - MaxAngle) * sqrt(10 / SwingRadius) * FMath::Sin(t * 0.1 * sqrt(10 / SwingRadius));
+			AngularPosition = - (PI - MaxAngle) * FMath::Cos(t * 0.1 * sqrt(10 / SwingRadius)) + (PI - MaxAngle); //rotation rate changes depending where it is on the cycle (enables pivot to go back and forth)
+			AngularSpeed = (PI - MaxAngle) * sqrt(10 / SwingRadius) * FMath::Sin(t * 0.1 * sqrt(10 / SwingRadius));
 		}
 }
 
@@ -409,13 +402,13 @@ FVector AMyPlayer::CalculateSwingingPosition()
 	
 	if(InitialSwingPosition.Z - SwingPivot.Z < 0) //if swing pivot is above the player
 		{
-			SwingPosition = FVector (SwingRadius * FMath::Sin(-AngularSpeed) * FMath::Cos(XYangle) + SwingPivot.X , SwingRadius * FMath::Sin(-AngularSpeed) * FMath::Sin(XYangle) + SwingPivot.Y, - SwingRadius * FMath::Cos(-AngularSpeed) + SwingPivot.Z);
-			SwingVelocity = - 10 * FVector (SwingRadius * AngularAcceleration * FMath::Cos(-AngularSpeed) * FMath::Cos(XYangle), SwingRadius * AngularAcceleration * FMath::Cos(-AngularSpeed) * FMath::Sin(XYangle), SwingRadius * AngularAcceleration * FMath::Sin(-AngularSpeed));
+			SwingPosition = FVector (SwingRadius * FMath::Sin(-AngularPosition) * FMath::Cos(XYangle) + SwingPivot.X , SwingRadius * FMath::Sin(-AngularPosition) * FMath::Sin(XYangle) + SwingPivot.Y, - SwingRadius * FMath::Cos(-AngularPosition) + SwingPivot.Z);
+			SwingVelocity = - 10 * FVector (SwingRadius * AngularSpeed * FMath::Cos(-AngularPosition) * FMath::Cos(XYangle), SwingRadius * AngularSpeed * FMath::Cos(-AngularPosition) * FMath::Sin(XYangle), SwingRadius * AngularSpeed * FMath::Sin(-AngularPosition));
 		}
 	else //if swing pivot height is below the player
 		{
-			SwingPosition = FVector (SwingRadius * FMath::Sin(AngularSpeed + MaxAngle) * FMath::Cos(XYangle) + SwingPivot.X , SwingRadius * FMath::Sin(AngularSpeed + MaxAngle) * FMath::Sin(XYangle) + SwingPivot.Y, SwingRadius * FMath::Cos(AngularSpeed + MaxAngle) + SwingPivot.Z);
-			SwingVelocity = 10 * FVector (SwingRadius * AngularAcceleration * FMath::Cos(AngularSpeed + MaxAngle) * FMath::Cos(XYangle), SwingRadius * AngularAcceleration * FMath::Cos(AngularSpeed + MaxAngle) * FMath::Sin(XYangle), - SwingRadius * AngularAcceleration * FMath::Sin(AngularSpeed + MaxAngle));
+			SwingPosition = FVector (SwingRadius * FMath::Sin(AngularPosition + MaxAngle) * FMath::Cos(XYangle) + SwingPivot.X , SwingRadius * FMath::Sin(AngularPosition + MaxAngle) * FMath::Sin(XYangle) + SwingPivot.Y, SwingRadius * FMath::Cos(AngularPosition + MaxAngle) + SwingPivot.Z);
+			SwingVelocity = 10 * FVector (SwingRadius * AngularSpeed * FMath::Cos(AngularPosition + MaxAngle) * FMath::Cos(XYangle), SwingRadius * AngularSpeed * FMath::Cos(AngularPosition + MaxAngle) * FMath::Sin(XYangle), - SwingRadius * AngularSpeed * FMath::Sin(AngularPosition + MaxAngle));
 		}
 
 	return SwingPosition;
@@ -423,31 +416,31 @@ FVector AMyPlayer::CalculateSwingingPosition()
 
 void AMyPlayer::Die()
 {
-	if(GetActorLocation().Z < -5000)
+	if(GetActorLocation().Z < -5000) //if the player has fallen off the plaform 
 	{
-		SetActorLocation(InitialSpawnLocation);
+		SetActorLocation(InitialSpawnLocation); //respawn player at last visited spawn point
 	}
 }
 
 void AMyPlayer::SetRespawnPoint()
 {
-	if(RespawnLocations.Num() < 1)
+	if(RespawnLocations.Num() < 1) //if there are no respawn points
 	{
 		return;
 	}
 
-	for(ATriggerVolume* SpawnPoint: RespawnLocations)
+	for(ATriggerVolume* SpawnPoint: RespawnLocations) //for each respawn location 
 	{	
 		TArray<AActor*> ActorsOnRespawnPoint;
-		SpawnPoint->GetOverlappingActors(ActorsOnRespawnPoint);
+		SpawnPoint->GetOverlappingActors(ActorsOnRespawnPoint); //identify all actors in respawn location
 
-		for(AActor* Body: ActorsOnRespawnPoint)
+		for(AActor* Body: ActorsOnRespawnPoint) 
 		{
 			AMyPlayer* PlayerPawn = Cast<AMyPlayer>(Body);
 
-			if(PlayerPawn)
+			if(PlayerPawn) //if one of the actors (in the respawn location) is the player 
 			{
-				InitialSpawnLocation = GetActorLocation();
+				InitialSpawnLocation = GetActorLocation(); //set respawn point
 			}
 		}
 	}
