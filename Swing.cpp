@@ -15,7 +15,7 @@ ASwing::ASwing()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	BulletMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BulletMesh")); 
+	BulletMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BulletMesh")); //create static mesh for swing bullet
 	RootComponent = BulletMesh;
 }
 
@@ -26,9 +26,9 @@ void ASwing::BeginPlay()
 	
 	BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ASwing::OnOverlapBegin);
 
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerPosition, BulletDirection);
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerPosition, BulletDirection); //save location and rotation of player (so the swing bullet can move in a straight line from where the player was originally looking)
 
-	PlayerPawn = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
+	PlayerPawn = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)); //save reference to player
 }
 
 // Called every frame
@@ -40,10 +40,10 @@ void ASwing::Tick(float DeltaTime)
 
 void ASwing::Move()
 {
-	if(bHit == false)
+	if(bHit == false) //if swing hasn't hit anything
 	{	
 		FVector Position = GetActorLocation();
-		Position = Position + BulletSpeed * BulletDirection.Vector();
+		Position = Position + BulletSpeed * BulletDirection.Vector(); //the swing moves in a straight line from where the player was, in the direction the player was originally looking
 		SetActorLocation(Position);
 	}
 }
@@ -68,7 +68,7 @@ void ASwing::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 			return;
 		}
 			
-		ASwingingPlatform* SwingWithBase = Cast<ASwingingPlatform>(OtherActor); //if swing hits platform with base, tell the player swing height of base and return
+		ASwingingPlatform* SwingWithBase = Cast<ASwingingPlatform>(OtherActor); //if swing hits platform with base, tell the player height of base and return
 		if(SwingWithBase) 
 		{	
 			Player->SwingHasBase(SwingWithBase->GetActorLocation().Z + 20);
@@ -85,14 +85,9 @@ void ASwing::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 		{
 			if(Block->bMovementComponent)
 			{
-				Block->bMovementEnabled = false;
+				Block->bMovementEnabled = false; //disable movement of block
 			}
 		}
-
-		// else
-		// {
-		// 	Block = nullptr;
-		// }
 	
 		UActorComponent* ForwardComponent = OtherActor->FindComponentByClass(UMoveForwardComponent::StaticClass()); //if platform has movement component, make platform stationary and save reference
 
@@ -102,8 +97,8 @@ void ASwing::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 
 			if(IsValid(MoveForwardComponent))
 			{
-				MoveForwardComponent->bStationary = true;  
-				MoveForwardActor = OtherActor;
+				MoveForwardComponent->bStationary = true;  //disable movement component of actor
+				MoveForwardActor = OtherActor; //save reference to actor
 				return;
 			}
 		}
@@ -114,7 +109,7 @@ void ASwing::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 void ASwing::Release()
 {	
 
-	if(IsValid(Block)) //if releasing from block, set movement on
+	if(IsValid(Block)) //if releasing the swing bullet from a block, switch the blocks movement back on
 	{	
 		if(Block->IsValidLowLevel())
 		{	
@@ -125,11 +120,11 @@ void ASwing::Release()
 		}
 	}
 
-	if(IsValid(MoveForwardActor))
+	if(IsValid(MoveForwardActor)) //if we had to switch off the movement component of an actor, switch it back on
 	{	
 		if(MoveForwardActor->IsValidLowLevel())
 		{	
-			UActorComponent* ForwardComponent = MoveForwardActor->FindComponentByClass(UMoveForwardComponent::StaticClass());     // BUGGG
+			UActorComponent* ForwardComponent = MoveForwardActor->FindComponentByClass(UMoveForwardComponent::StaticClass());  
 
 			if(IsValid(ForwardComponent))
 			{
